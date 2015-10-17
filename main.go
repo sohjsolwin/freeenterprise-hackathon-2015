@@ -63,7 +63,7 @@ var stateList = []string{
 func getQuandlData(rw http.ResponseWriter, req *http.Request) {
 	var url string
 	for _, state := range stateList {
-		url = fmt.Sprintf(stateUnemploymentRequestTemplate, state, "2001-01-01", "2015-12-30")
+		url = fmt.Sprintf(stateUnemploymentRequestTemplate, state, "20010101", "20151230")
 		var tmp QuandlEmploymentData
 		err := getJson(url, &tmp)
 
@@ -85,6 +85,7 @@ func getQuandlData(rw http.ResponseWriter, req *http.Request) {
 	}
     
     json.NewEncoder(rw).Encode(stateData)
+    fmt.Fprintf(rw, req.URL.Path)
 	//	tmp, err := getRawBody(url)
 
 }
