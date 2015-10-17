@@ -2,9 +2,9 @@ package main
 
 import (
 	//"encoding/json"
+	"io/ioutil"
 	"log"
 	"net/http"
-    "io/ioutil"
 )
 
 type QuandlEmploymentData struct {
@@ -38,34 +38,34 @@ type QuandlDataset struct {
 func getQuandlData(rw http.ResponseWriter, req *http.Request) {
 	url := "https://www.quandl.com/api/v3/datasets/ADP/EMPL_SEC.json?auth_token=7GKGd3eZ4wexWY4Ge1bb&start_date=2015-09-01&end_date=2015-09-30"
 	tmp, err := getRawBody(url)
-    
-    if err != nil {
-        log.Println("Error Occured")
-        log.Println(err)    
-    } else {
-        log.Println("Data Received")
-        log.Println(tmp)
-    }
+
+	if err != nil {
+		log.Println("Error Occured")
+		log.Println(err)
+	} else {
+		log.Println("Data Received")
+		log.Println(tmp)
+	}
 }
 
 func getRawBody(url string) (string, error) {
-    r, err := http.Get(url)
-    if err != nil {
-        return "", err
-    }
-    defer r.Body.Close()
-    
-    output, _:= ioutil.ReadAll(r.Body)
-    return string(output), nil
+	r, err := http.Get(url)
+	if err != nil {
+		return "", err
+	}
+	defer r.Body.Close()
+
+	output, _ := ioutil.ReadAll(r.Body)
+	return string(output), nil
 }
 
 //func getJson(url string, target interface{}) error {
 //    body, err := getRawBody(url)
-//    
+//
 //    if err != nil {
 //        return err
 //    }
-//    
+//
 //	return json.NewDecoder(body).Decode(&target)
 //}
 
