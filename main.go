@@ -1,8 +1,8 @@
 package main
 
 import (
-	//"encoding/json"
-	"fmt"
+	"encoding/json"
+	//"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -13,32 +13,34 @@ type QuandlEmploymentData struct {
 }
 
 type QuandlDataset struct {
-	Id                  int        `json:"id"`
-	DatasetCode         string     `json:"dataset_code"`
-	DatabaseCode        string     `json:"database_code"`
-	Name                string     `json:"name"`
-	Description         string     `json:"description"`
-	RefreshedAt         string     `json:"refreshed_at"`
-	NewestAvailableDate string     `json:"newest_available_date"`
-	OldestAvailableDate string     `json:"oldest_available_date"`
-	ColumnNames         []string   `json:"column_names"`
-	Frequency           string     `json:"frequency"`
-	Type                string     `json:"type"`
-	Premium             bool       `json:"premium"`
-	Limit               string     `json:"limit"`
-	Transform           string     `json:"transform"`
-	ColumnIndex         string     `json:"column_index"`
-	StartDate           string     `json:"start_date"`
-	EndDate             string     `json:"end_date"`
-	Data                [][]string `json:"data"`
-	Collapse            string     `json:"collapse"`
-	Order               string     `json:"order"`
-	DatabaseId          string     `json:"database_id"`
+	Id                  int             `json:"id"`
+	DatasetCode         string          `json:"dataset_code"`
+	DatabaseCode        string          `json:"database_code"`
+	Name                string          `json:"name"`
+	Description         string          `json:"description"`
+	RefreshedAt         string          `json:"refreshed_at"`
+	NewestAvailableDate string          `json:"newest_available_date"`
+	OldestAvailableDate string          `json:"oldest_available_date"`
+	ColumnNames         []string        `json:"column_names"`
+	Frequency           string          `json:"frequency"`
+	Type                string          `json:"type"`
+	Premium             bool            `json:"premium"`
+	Limit               string          `json:"limit"`
+	Transform           string          `json:"transform"`
+	ColumnIndex         string          `json:"column_index"`
+	StartDate           string          `json:"start_date"`
+	EndDate             string          `json:"end_date"`
+	Data                [][]interface{} `json:"data"`
+	Collapse            string          `json:"collapse"`
+	Order               string          `json:"order"`
+	DatabaseId          int             `json:"database_id"`
 }
 
 func getQuandlData(rw http.ResponseWriter, req *http.Request) {
 	url := "https://www.quandl.com/api/v3/datasets/ADP/EMPL_SEC.json?auth_token=7GKGd3eZ4wexWY4Ge1bb&start_date=2015-09-01&end_date=2015-09-30"
-	tmp, err := getRawBody(url)
+	//	tmp, err := getRawBody(url)
+	var tmp QuandlEmploymentData
+	err := getJson(url, &tmp)
 
 	if err != nil {
 		log.Println("Error Occured")
@@ -46,7 +48,7 @@ func getQuandlData(rw http.ResponseWriter, req *http.Request) {
 	} else {
 		log.Println("Data Received")
 		log.Println(tmp)
-		fmt.Fprintf(rw,tmp)
+		//fmt.Fprintf(rw, tmp)
 		//rw.Println(tmp)
 	}
 }
@@ -62,15 +64,15 @@ func getRawBody(url string) (string, error) {
 	return string(output), nil
 }
 
-//func getJson(url string, target interface{}) error {
-//    body, err := getRawBody(url)
-//
-//    if err != nil {
-//        return err
-//    }
-//
-//	return json.NewDecoder(body).Decode(&target)
-//}
+func getJson(url string, target interface{}) error {
+	r, err := http.Get(url)
+	if err != nil {
+		return err
+	}
+	defer r.Body.Close()
+
+	return json.NewDecoder(r.Body).Decode(&target)
+}
 
 func main() {
 	http.HandleFunc("/quandl", getQuandlData)

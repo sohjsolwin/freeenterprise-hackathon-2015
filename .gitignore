@@ -23,5 +23,5 @@ _testmain.go
 *.test
 *.prof
 
-freeenterprise-hackathon-2015
-
+/freeenterprise-hackathon-2015
+/main
