@@ -2,6 +2,7 @@ package main
 
 import (
 	//"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -45,6 +46,8 @@ func getQuandlData(rw http.ResponseWriter, req *http.Request) {
 	} else {
 		log.Println("Data Received")
 		log.Println(tmp)
+		fmt.Fprintf(rw,tmp)
+		//rw.Println(tmp)
 	}
 }
 
