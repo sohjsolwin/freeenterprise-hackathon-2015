@@ -153,35 +153,47 @@ func getQuandlData(rw http.ResponseWriter, req *http.Request) {
 }
 
 func getHavenData(rw http.ResponseWriter, req *http.Request) {
-	var urlVal string
 	urlParms, _ := getUrlParameters(req.URL.String())
 
+	doneChannel := make(chan bool)
+	doneCount := len(stateList)
 	for key, value := range stateList {
-		urlVal = fmt.Sprintf(havenNewQueryTemplate, value, urlParms["from"][0])
-		var tmp HavenDocumentQuery
-		err := getJson(urlVal, &tmp)
-		//val, err := getRawBody(urlVal)
-		if err != nil {
-			log.Println("Error Occured")
-			log.Println(err)
-		} else {
-			log.Println(fmt.Sprintf("Data Received for state [%s] url [%s] ", key, urlVal))
-			log.Println(tmp)
-		}
-
-		stateRecs := make(map[string]StateArticleSentimentRecord)
-		for _, rec := range tmp.Documents {
-			stateRecs[rec.Title] = StateArticleSentimentRecord{ArticleLink: rec.Reference}
-		}
-
-		stateSentimentData[key] = stateRecs
-
+		go processHavenData(doneChannel, key, value, urlParms)
 	}
+
+	for doneCount > 0 {
+		<-doneChannel
+		doneCount--
+	}
+	close(doneChannel)
 
 	json.NewEncoder(rw).Encode(stateSentimentData)
 
 	//	tmp, err := getRawBody(url)
 
+}
+
+func processHavenData(done chan bool, key string, value string, urlParms map[string][]string) {
+    urlVal := fmt.Sprintf(havenNewQueryTemplate, value, urlParms["from"][0])
+	var tmp HavenDocumentQuery
+	err := getJson(urlVal, &tmp)
+	//val, err := getRawBody(urlVal)
+	if err != nil {
+		log.Println("Error Occured")
+		log.Println(err)
+	} else {
+		log.Println(fmt.Sprintf("Data Received for state [%s] url [%s] ", key, urlVal))
+		log.Println(tmp)
+	}
+
+	stateRecs := make(map[string]StateArticleSentimentRecord)
+	for _, rec := range tmp.Documents {
+		stateRecs[rec.Title] = StateArticleSentimentRecord{ArticleLink: rec.Reference}
+	}
+
+	stateSentimentData[key] = stateRecs
+
+	done <- true
 }
 
 func getUrlParameters(urlVal string) (map[string][]string, error) {
