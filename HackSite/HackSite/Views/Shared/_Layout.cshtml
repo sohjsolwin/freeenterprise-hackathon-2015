@@ -1,0 +1,57 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>@ViewBag.Title</title>
+    @Styles.Render("~/Content/css")
+    @Scripts.Render("~/bundles/modernizr")
+
+    @Scripts.Render("~/bundles/jquery")
+    @Scripts.Render("~/bundles/bootstrap")
+    @RenderSection("scripts", required: false)
+    <link href="~/Content/styles.css" rel="stylesheet" />
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
+    <script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+    <script type="text/javascript" src="https://www.google.com/jsapi?autoload={'modules':[{'name':'visualization','version':'1.1','packages':['geochart']}]}"></script>
+    <script src="~/Scripts/scripts.js"></script>
+    
+
+    <style>
+        .gm-style-iw * {
+            display: block;
+            width: 100%;
+        }
+
+        .gm-style-iw h4, .gm-style-iw p {
+            margin: 0;
+            padding: 0;
+        }
+
+        .gm-style-iw a {
+            color: #4272db;
+        }
+
+        #map-canvas {
+            margin: 20px 0;
+            padding: 0;
+            height: 600px;
+            float: left;
+            width: 100%;
+        }
+
+        #regions_div {
+            margin: 20px 0;
+            padding: 0;
+            height: 550px;
+            float: left;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        @RenderBody()
+    </div>
+</body>
+</html>

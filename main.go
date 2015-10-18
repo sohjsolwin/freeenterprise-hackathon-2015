@@ -11,7 +11,7 @@ import (
 
 var stateUnemploymentRequestTemplate string = "https://www.quandl.com/api/v3/datasets/FRED/%sUR.json?auth_token=7GKGd3eZ4wexWY4Ge1bb&start_date=%s&end_date=%s"
 
-var havenNewQueryTemplate string = "https://api.havenondemand.com/1/api/sync/querytextindex/v1?text=%s&ignore_operators=false&indexes=news_eng&max_date=%s&print=fields&print_fields=reference+title&promotion=false&sort=date&summary=off&total_results=false&apikey=93e3f03c-9767-4c2c-b38d-bd48c597295e"
+var havenNewQueryTemplate string = "https://api.havenondemand.com/1/api/sync/querytextindex/v1?text=%s&ignore_operators=false&indexes=news_eng&max_date=%s&print=fields&print_fields=reference+title&promotion=false&sort=date&summary=off&total_results=false&apikey=d7a29c10-041c-41b0-84f4-d3ec24cb4687"
 
 var havenSentimentApi string = "https://api.havenondemand.com/1/api/sync/analyzesentiment/v1"
 
@@ -212,7 +212,7 @@ func processHavenData(done chan bool, key string, value string, urlParms map[str
     //now get the sentiments for the collection of article links.
     
     urlVals := url.Values{}
-    urlVals.Set("apikey", "93e3f03c-9767-4c2c-b38d-bd48c597295e")
+    urlVals.Set("apikey", "d7a29c10-041c-41b0-84f4-d3ec24cb4687")
     
     for i := range stateArticleLinks {
         urlVals.Add("url", stateArticleLinks[i])

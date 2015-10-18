@@ -1,0 +1,187 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>@ViewBag.Title</title>
+    @Styles.Render("~/Content/css")
+    @Scripts.Render("~/bundles/modernizr")
+
+    @Scripts.Render("~/bundles/jquery")
+    @Scripts.Render("~/bundles/bootstrap")
+    @RenderSection("scripts", required: false)
+    <link href="Content/styles.css" rel="stylesheet" />
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
+    <script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+    <script type="text/javascript" src="https://www.google.com/jsapi?autoload={'modules':[{'name':'visualization','version':'1.1','packages':['geochart']}]}"></script>
+    <script src="Scripts/scripts.js"></script>
+    <script>
+
+        //$(function () {
+
+        //    var startDate = '2013-10-01';
+        //    var endDate = '2015-08-01';
+        //    var totalMonths = '24';
+
+
+        //    $("#slider").slider({
+        //        value: totalMonths,
+        //        min: 0,
+        //        max: totalMonths,
+        //        step: 1,
+        //        slide: function (event, ui) {
+        //            var tickDate = new Date(startDate);
+        //            tickDate.setMonth(tickDate.getMonth() + ui.value);
+        //            var selectedDate = tickDate.toLocaleDateString()
+
+        //            $("#amount").val(selectedDate);
+
+        //            $.ajax({
+        //                url: '/api/employmentdata/getData?date=' + selectedDate,
+        //                type: 'GET',
+        //                dataType: 'json',
+        //                success: function (data) {
+        //                    refreshMapWithDate(data);
+        //                },
+        //                error: function (x, y, z) {
+        //                    console.log(x + '\n' + y + '\n' + z);
+        //                }
+        //            });
+        //        }
+        //    });
+        //    $("#amount").val($("#slider").slider("value"));
+        //    $("#amount").val(endDate);
+        //});
+
+        function pullAndRefreshData() {
+            $.ajax({
+                url: '/api/newsdata/getData',
+                type: 'GET',
+                dataType: 'json',
+                success: function (data) {
+                    refreshMapWithDate(data);
+                },
+                error: function (x, y, z) {
+                    console.log(x + '\n' + y + '\n' + z);
+                }
+            });
+        }
+
+        google.load("visualization", "1", { packages: ["geochart"] });
+        google.setOnLoadCallback(pullAndRefreshData);
+
+        var chart = null;
+        var datatable = null;
+
+
+
+        function refreshMapWithDate(data) {
+            var dtArr = data;
+            datatable = google.visualization.arrayToDataTable(dtArr);
+
+
+            var options = {
+                region: 'US', // Africa
+                resolution: 'provinces',
+                colorAxis: { minValue: 1, colors: ['green', 'yellow', 'red'] },
+                backgroundColor: '#81d4fa',
+                datalessRegionColor: '#ffffff',
+                defaultColor: 'green',
+            };
+
+            if (!chart) {
+                chart = new google.visualization.GeoChart(document.getElementById('regions_div'));
+                google.visualization.events.addListener(chart, 'select', regionClicked);
+            }
+            chart.draw(datatable, options);
+        }
+
+
+        function regionClicked() {
+            var selection = chart.getSelection();
+
+            var selectedItem = chart.getSelection()[0];
+            if (selectedItem) {
+                var value = datatable.getValue(selectedItem.row, 0);
+
+
+                $.ajax({
+                    url: '/api/employmentdata/getStateInfo?state='+value,
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function (data) {
+                        $('#pnlStateInfo').removeClass('hidden');
+                        $('#lblState').replaceWith($('<h3 id="lblState" class="panel-title">'+ value +'</h3>'));
+                    },
+                    error: function (x, y, z) {
+                        console.log(x + '\n' + y + '\n' + z);
+                    }
+                });
+            }
+        }
+
+
+    </script>
+
+    <style>
+        .gm-style-iw * {
+            display: block;
+            width: 100%;
+        }
+
+        .gm-style-iw h4, .gm-style-iw p {
+            margin: 0;
+            padding: 0;
+        }
+
+        .gm-style-iw a {
+            color: #4272db;
+        }
+
+        #map-canvas {
+            margin: 20px 0;
+            padding: 0;
+            height: 600px;
+            float: left;
+            width: 100%;
+        }
+
+        #regions_div {
+            margin: 20px 0;
+            padding: 0;
+            height: 550px;
+            float: left;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <nav class="navbar navbar-trans">
+            <div class="container-fluid">
+                <!-- Brand and toggle get grouped for better mobile display -->
+                <div class="navbar-header">
+                    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+                        <span class="sr-only">Toggle navigation</span>
+                    </button>
+                    <a class="navbar-brand" href="#">GSD</a>
+                </div>
+
+                <!-- Collect the nav links, forms, and other content for toggling -->
+                <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                    <ul class="nav navbar-nav">
+                        <li><a onclick="$('.activeButton').removeClass('activeButton');$('#unemployment-button').addClass('activeButton')" href="#" class="activeButton" id="unemployment-button">Unemployment Data</a></li>
+                        <li><a href="#" onclick="$('.activeButton').removeClass('activeButton'); $('#happiness-button').addClass('activeButton')" id="happiness-button">Happiness Rate</a></li>
+                    </ul>
+                </div>
+                <!-- /.navbar-collapse -->
+            </div>
+            <!-- /.container-fluid -->
+        </nav>
+
+        @RenderBody()
+    </div>
+
+</body>
+</html>
+
