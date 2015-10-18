@@ -13,6 +13,8 @@ var stateUnemploymentRequestTemplate string = "https://www.quandl.com/api/v3/dat
 
 var havenNewQueryTemplate string = "https://api.havenondemand.com/1/api/sync/querytextindex/v1?text=%s&ignore_operators=false&indexes=news_eng&max_date=%s&print=fields&print_fields=reference+title&promotion=false&sort=date&summary=off&total_results=false&apikey=93e3f03c-9767-4c2c-b38d-bd48c597295e"
 
+var havenSentimentApi string = "https://api.havenondemand.com/1/api/sync/analyzesentiment/v1"
+
 var stateData map[string]([]StateUnemploymentDataRecord)
 var stateSentimentData map[string](map[string]StateArticleSentimentRecord)
 
@@ -77,6 +79,14 @@ type StateUnemploymentDataRecord struct {
 type StateArticleSentimentRecord struct {
 	SentimentScore float32
 	ArticleLink    string
+}
+type AggregateSentiment struct {
+    Sentiment string `json:"sentiment"`
+    Score float32 `json:"score"`
+}
+
+type SentimentResults struct {
+    Aggregate AggregateSentiment `json:"aggregate"`
 }
 
 type QuandlEmploymentData struct {
@@ -174,7 +184,10 @@ func getHavenData(rw http.ResponseWriter, req *http.Request) {
 }
 
 func processHavenData(done chan bool, key string, value string, urlParms map[string][]string) {
-	urlVal := fmt.Sprintf(havenNewQueryTemplate, value, urlParms["from"][0])
+	
+    //Get the new haven data
+    
+    urlVal := fmt.Sprintf(havenNewQueryTemplate, value, urlParms["from"][0])
 	var tmp HavenDocumentQuery
 	err := getJson(urlVal, &tmp)
 	//val, err := getRawBody(urlVal)
@@ -186,12 +199,44 @@ func processHavenData(done chan bool, key string, value string, urlParms map[str
 		log.Println(tmp)
 	}
 
-	stateRecs := make(map[string]StateArticleSentimentRecord)
+	stateRecs := make(map[string]string)
 	for _, rec := range tmp.Documents {
-		stateRecs[rec.Title] = StateArticleSentimentRecord{ArticleLink: rec.Reference}
+		stateRecs[rec.Title] = rec.Reference
 	}
+    
+    stateArticleLinks := make([]string, 0, len(stateRecs))
+    for _, rec := range stateRecs {
+        stateArticleLinks = append(stateArticleLinks, rec)
+    }
 
-	stateSentimentData[key] = stateRecs
+    //now get the sentiments for the collection of article links.
+    
+    urlVals := url.Values{}
+    urlVals.Set("apikey", "93e3f03c-9767-4c2c-b38d-bd48c597295e")
+    
+    for i := range stateArticleLinks {
+        urlVals.Add("url", stateArticleLinks[i])
+    }
+    
+    var sentiTmp SentimentResults
+    
+	err = postJson(havenSentimentApi, &sentiTmp, urlVals)
+	//val, err := getRawBody(urlVal)
+	if err != nil {
+		log.Println("Error Occured")
+		log.Println(err)
+	} else {
+		log.Println(fmt.Sprintf("Data Received for state [%s] url [%s] ", key, urlVal))
+		log.Println(sentiTmp)
+	}
+    
+    stateFullRecs := make(map[string]StateArticleSentimentRecord)	
+    for i, rec := range stateRecs {
+        stateFullRecs[i] = StateArticleSentimentRecord{SentimentScore: sentiTmp.Aggregate.Score, ArticleLink: rec}
+    }
+
+    
+	stateSentimentData[key] = stateFullRecs
 
 	done <- true
 }
@@ -219,6 +264,16 @@ func getRawBody(urlVal string) (string, error) {
 
 func getJson(url string, target interface{}) error {
 	r, err := http.Get(url)
+	if err != nil {
+		return err
+	}
+	defer r.Body.Close()
+
+	return json.NewDecoder(r.Body).Decode(&target)
+}
+
+func postJson(url string, target interface{}, vals url.Values) error {
+	r, err := http.PostForm(url, vals)
 	if err != nil {
 		return err
 	}
