@@ -174,7 +174,7 @@ func getHavenData(rw http.ResponseWriter, req *http.Request) {
 }
 
 func processHavenData(done chan bool, key string, value string, urlParms map[string][]string) {
-    urlVal := fmt.Sprintf(havenNewQueryTemplate, value, urlParms["from"][0])
+	urlVal := fmt.Sprintf(havenNewQueryTemplate, value, urlParms["from"][0])
 	var tmp HavenDocumentQuery
 	err := getJson(urlVal, &tmp)
 	//val, err := getRawBody(urlVal)
